@@ -7,14 +7,25 @@ html, body {
 	height: 100%;
 }
 
-#selectView {
+#detailsHeader {
+	background: black;
+	width: 100%;
+}
+
+#detailsHeader td.center {
+	width: 100%;
+	color: white;
+	text-align: center;
+}
+
+#detailsTable {
 	width: 100%;
 	height: 100%;
 }
 
 .lat {
 	margin: auto;
-	width: 350px;
+	width: 70%;
 }
 
 .btn-xl {
@@ -23,22 +34,16 @@ html, body {
 	border-radius: 8px !important;
 }
 
-.busTime {
-	padding-right: 5px;
-	font-size: 36px;
-}
-
 .btnBack {
 	visibility : hidden;
 	margin: 5px 0 20px;
 }
 
-.busLegend {
-	width: 100%;
-	padding-left: 5px;
-	font-size: 18px;
-}
-
-.marginBtmSmall {
-	margin-bottom: 5px !important;
+#checkInToast {
+	margin: 50px auto;
+	width: 350px;
+	visibility: hidden;
+	background: black;
+	color: white;
+	text-align: center;
 }

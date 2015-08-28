@@ -10,33 +10,60 @@
         <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
         <title>Metro Systems Time Tracker</title>
     </head>
-    <body class="vertical-center">
+    <body>
 	    <!-- Main View -->
 	    <table id="mainView">
 	    	<tr>
 	    		<td>
 					<div class="lat">
-						<button type="button" id="btnToWork" class="btn btn-xl btn-danger btn-block"><span class="glyphicon glyphicon-briefcase"></span><b></b></button>
-						<button type="button" id="btnFromWork" class="btn btn-success btn-xl btn-block"><span class="glyphicon glyphicon-home"></span><b></b></button>
+						<button type="button" id="btnCheckIn" class="btn btn-xl btn-danger btn-block"><b>Check in</b></button>
+						<button type="button" id="btnDetails" class="btn btn-xl btn-block"><b>Details</b></button>						
 					</div>
+					<div id="checkInToast" class="well well-sm">*</div>
 				</td>
 			</tr>
 		</table>
 		<!-- /Main View -->
 		
+		<!-- Details View -->
+		<div id="detailsView" class="container">
+			<table id="detailsHeader">
+				<tr>
+					<td class="left">
+						<button type="button" id="btnPrev" class="btn btn-default btn-xl"><span class="glyphicon glyphicon-fast-backward"></span></button>
+					</td>
+					<td class="center">
+						<h2>August</h2>
+					</td>
+					<td class="right">
+						<button type="button" id="btnNext" class="btn btn-default btn-xl"><span class="glyphicon glyphicon-fast-forward"></span></button>
+					</td>					
+				</tr>
+			</table>
+			<table id="detailsTable" class="table table-striped">
+				<tr>
+					<th>Day</th>
+					<th>Name</th>
+					<th>Start</th>
+					<th>Stop</th>
+					<th>Diff</th>
+				</tr>			
+			</table>						
+		</div>
+		<!-- /Details View -->
 	
 		<script type="text/javascript" src="cordova.js"></script>
 		<script type="text/javascript" src="js/jquery.min.js"></script>
 		<script type="text/javascript" src="js/bootstrap.min.js"></script>
-		<script type="text/javascript" src="js/constants.js"></script>
-		<script type="text/javascript" src="js/db.js"></script>
 		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript">
-		    	if (navigator.userAgent.match(/(Android|IEMobile)/)) {
-					app.initialize();
-		    	} else {
-		    		app.onDeviceReady(); //this is the browser
-		    	}
+		isMobileApp = document.URL.indexOf( 'http://' ) === -1 && document.URL.indexOf( 'file:///home' ) === -1;
+		if ( isMobileApp ) {
+		 	app.initialize(); //Phonegap init 
+		} else {
+			app.onDeviceReady(); //this is the browser 
+		 	$(".btnBack").css("visibility", "visible");
+		}
 		</script>
     </body>
 </html>

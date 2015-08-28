@@ -17,75 +17,24 @@ var app = {
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicitly call 'app.receivedEvent(...);'
     onDeviceReady: function() {
-
-    	//Initialize the LANG array depending on the locale
-    	LANG = {};
-    	if (navigator != null && navigator.globalization != null) {   	
-			navigator.globalization.getLocaleName(
-					function (locale) { //If a valid locale exists then this will be executed
-						if (locale.value == 'ro-RO') {
-							LANG = LANG_RO;
-						} else {
-							LANG = LANG_EN;
-						}
-					},
-					function () { //If a locale doesn't exists then this will be executed
-						LANG = LANG_EN;
-					}
-			);
-    	} else { //Hack to make the application work on PC too
-			LANG = LANG_EN;
+    	
+    	//Hide not needed elements
+//    	$("#checkInToast").hide();
+    	
+    	//If a check in was made today transform the checkIn button to a check out button
+    	var now = new Date();
+    	if (localStorage.getItem(now.getYmd()) != null) {
+    		checkInToCheckOut();
     	}
     	
-    	//Hide views which are not the mainView
-    	$("#busesView").hide();
-    	$("#selectView").hide();
-    	
-    	//Set i18n for button labels
-    	setTimeout(function() {    		
-    		$("#btnToWork b").text(" " + LANG.btn_going_to_work);
-    		$("#btnFromWork b").text(" " + LANG.btn_back_from_work);
-    		$("#btnTimetable b").text(" " + LANG.btn_timetable);    	
-    	}, 100);
-    	
     	//Handler for clicking on btnToWork button 
-    	$("#btnToWork").click(function() {
-    		createBusesView(true);
+    	$("#btnCheckIn").click(function() {
+    		checkIn();
     	});
     	
-    	//Handler for clicking on btnFromWork button 
-    	$("#btnFromWork").click(function() {
-    		createBusesView(false);
-    	});
-    	
-    	//Handler for clicking on btnTimetable button 
-    	$("#btnTimetable").click(function() {
-    		$("#btnToWorkMonThu b").text(" " + LANG.btn_to_work_mon_thu);
-    		$("#btnToWorkFri b").text(" " + LANG.btn_to_work_fri);
-    		$("#btnFromWorkMonThu b").text(" " + LANG.btn_from_work_mon_thu);
-    		$("#btnFromWorkFri b").text(" " + LANG.btn_from_work_fri);
-    		$("#mainView").hide();
-    		$("#selectView").show();
-    	});
-    	
-    	//Handler for clicking on btnToWorkMonThu button 
-    	$("#btnToWorkMonThu").click(function() {
-    		createBusesView(true, MON_THU);
-    	});
-
-    	//Handler for clicking on btnToWorkFri button 
-    	$("#btnToWorkFri").click(function() {
-    		createBusesView(true, FRIDAY);
-    	});
-    	
-    	//Handler for clicking on btnFromWorkMonThu button 
-    	$("#btnFromWorkMonThu").click(function() {
-    		createBusesView(false, MON_THU);
-    	});
-
-    	//Handler for clicking on btnFromWorkFri button 
-    	$("#btnFromWorkFri").click(function() {
-    		createBusesView(false, FRIDAY);
+    	//Handler for clicking on btnDetails button 
+    	$("#btnDetails").click(function() {
+    		showDetailsView();
     	});
 
     	//Handler for clicking on btnBack button 
@@ -111,72 +60,61 @@ var app = {
 };
 
 /**
- * Creates the buses view
- * @param isGoingToWork boolean
- * @param workDay [optional] FRIDAY or MON_THU
+ * Check in work for today. Persists either start time or end time
  */
-function createBusesView(isGoingToWork, workDay) {
-	$("#mainView").hide();
-	$("#selectView").hide();
-	$("#busesView .content").empty();
-	$("#busesView").show();
-	$("#busesView .content").append("<h4>" + LANG.label_main + "</h4>");
+function checkIn() {
 	
-	var currentTime = null;
-	if (workDay == null) { //if nor provided workDay needs to be calculated 
-		var now = new Date();
-		workDay = (now.getDay() == 5) ? FRIDAY : MON_THU;
-		currentTime = now.getHourMinute();
-	} else {		
-		currentTime = "00:00";
+	var now = new Date();
+	var currentTime = now.getHm();
+	var currentDay = now.getYmd();
+	
+	if (localStorage.getItem(currentDay) == null) {
+		localStorage.setItem(currentDay, currentTime);
+	} else {
+		var timeline = localStorage.getItem(currentDay).split(",");
+		var startTime = timeline[0];
+		localStorage.setItem(currentDay, startTime + "," + currentTime);
 	}
-	var buses = getBuses(currentTime, isGoingToWork, workDay);
-	var isApproximate = false;
+
+	//Create a confirmation toast
+	$("#checkInToast").html("Checkin registered at " + currentTime);
+	$("#checkInToast").css("visibility", "visible");
+	setTimeout(function() {
+		$("#checkInToast").css("visibility", "hidden");
+	}, 1500);
 	
-	for ( var i = 0; i < buses.length; i++) {
-		$("#busesView .content").append(createBusView(buses[i]));
-		if (! isApproximate && buses[i].isApproximate) {
-			isApproximate = true
-		}
-	} 
-	
-	if (isApproximate) {
-		$("#busesView .content").append("<h4>" + LANG.label_approximate + "</h4>");
-	}
+	//Transform the check in button to a checkout button
+	checkInToCheckOut();
 }
 
 /**
- * Creates a bus view well (widget)
- * @param bus Object
+ * Displays the details view with data for the current month
+ * @param: month - if null the current month will be displayed,
+ * else the provided month is displayed if it has any values registered
  */
-function createBusView(bus) {
-	var main = document.createElement("div");
-	main.className = "well well-sm marginBtmSmall"; 
+function showDetailsView(month, year) {
+	$("#mainView").hide();
+	$("#detailsView").show();
 	
-	var table = document.createElement("table");
-	var tr = document.createElement("tr");
+	//If month is null get the current month
+	if (month == null || year = null) {
+		var now = new Date();
+		month = now.getMonth() + 1; //getMonth() is zero based
+		year = now.getYear();
+	}
 	
-	var tdTime = document.createElement("td");
-	tdTime.className = "busTime"
-	tdTime.innerHTML = bus.time;	
-	tr.appendChild(tdTime);
-	
-	var tdImg = document.createElement("td");
-	var img = document.createElement("img");
-	img.src = (bus.busType == BIG_BUS) ? "img/big_bus.png" : "img/mini_bus.png";
-	tdImg.appendChild(img);
-	tr.appendChild(tdImg);
-	
-	var tdLegend = document.createElement("td");
-	tdLegend.className = "busLegend";
-	tdLegend.innerHTML = LANG.legend_part_1 + " " + bus.startStation + " " + LANG.legend_part_2 + " " + bus.endStation 
-							+ (bus.isApproximate ? " *" : "");	
-	tr.appendChild(tdLegend);
-		
-	table.appendChild(tr);
-	main.appendChild(table);
-	
-	return main;
+	//Iterate all days in the month and display values in the detailsTable
+	for (var i=1; i<=31; i++) {
+		var day = (i < 10) ? "0" + i : i.toString();
+		var ymd = year + month + day;
+		var item = localStorage.getItem(ymd); 
+		if (item != null) {
+			var hours = item.split(",");
+			if (hours.length == 2) {
+				
+			}
+		}
+	}
 }
 
 /**
@@ -187,21 +125,31 @@ function goBack() {
 		navigator.app.exitApp();
 	}
 	
-	if ($("#busesView").is(":visible")) { //busesView is the child of mainView
-		$("#busesView").hide();
+	if ($("#detailsView").is(":visible")) { //detailsView is the child of mainView
+		$("#detailsView").hide();
 		$("#mainView").show();
 	}
 	
-	if ($("#selectView").is(":visible")) { //selectView is the child of mainView
-		$("#selectView").hide();
+	if ($("#settingsView").is(":visible")) { //settingsView is the child of mainView
+		$("#settingsView").hide();
 		$("#mainView").show();
 	}
 }
 
 /**
- * add method 
+ * Transforms the checkIn button to a check out button
+ * by changing the background to red and the text to check out 
  */
-Date.prototype.getHourMinute = function()
+function checkInToCheckOut() {
+	$("#btnCheckIn").removeClass("btn-danger");
+	$("#btnCheckIn b").text("Check out");
+	$("#btnCheckIn").addClass("btn-success");    		
+}
+
+/**
+ * add method getHm which returns the time in hh:mm format to Date objects
+ */
+Date.prototype.getHm = function()
 {
     var hh = this.getHours();
     if (hh < 10)
@@ -224,4 +172,14 @@ Date.prototype.getHourMinute = function()
     }
     
     return hh + ":" + mm;
-}
+};
+
+/**
+ * add method getYmd which returns the date in yyyymmdd format to Date objects
+ */
+Date.prototype.getYmd = function() {
+	var yyyy = this.getFullYear().toString();
+	var mm = (this.getMonth()+1).toString(); // getMonth() is zero-based
+	var dd  = this.getDate().toString();
+	return yyyy + (mm[1]?mm:"0"+mm[0]) + (dd[1]?dd:"0"+dd[0]); // padding
+};
