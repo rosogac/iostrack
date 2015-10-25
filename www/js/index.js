@@ -97,11 +97,15 @@ function showDetailsView(month, year) {
 	$("#detailsView").show();
 	
 	//If month is null get the current month
-	if (month == null || year = null) {
+	if (month == null || year == null) {
 		var now = new Date();
 		month = now.getMonth() + 1; //getMonth() is zero based
-		year = now.getYear();
+		month = (month < 10) ? "0" + month : month.toString();
+		year = now.getFullYear();
 	}
+	
+	//Clear old entries from the details table 
+//	$("#detailsTable tbody").empty();
 	
 	//Iterate all days in the month and display values in the detailsTable
 	for (var i=1; i<=31; i++) {
@@ -110,11 +114,32 @@ function showDetailsView(month, year) {
 		var item = localStorage.getItem(ymd); 
 		if (item != null) {
 			var hours = item.split(",");
-			if (hours.length == 2) {
+			if (hours.length <= 2) { //There is only a check in time and no check out time
 				
+				var row = createDetailsRow(new Date(year + '-' + month + '-' + day + 'T00:00:00.000Z'),
+						hours[0], hours[1]);
+				
+				$("#detailsTable").append(row);
 			}
+//			else  { //There is a check in time and a check out time present
+//TODO handle time frames				
+//			}
 		}
 	}
+}
+
+/**
+ * creates a row in the details table
+ */
+function createDetailsRow(date, startTime, endTime) {
+	
+	var row = '<td>' + date.getDate() + '</td>';
+	row += '<td>' + date.getDayName() + '</td>';
+	row += '<td>' + startTime + '</td>';
+	row += '<td>' + (endTime != null ? endTime : '') + '</td>';
+	row += '<td>dif</td>';
+	
+	return '<tr>' + row + '</tr>';
 }
 
 /**
@@ -145,41 +170,3 @@ function checkInToCheckOut() {
 	$("#btnCheckIn b").text("Check out");
 	$("#btnCheckIn").addClass("btn-success");    		
 }
-
-/**
- * add method getHm which returns the time in hh:mm format to Date objects
- */
-Date.prototype.getHm = function()
-{
-    var hh = this.getHours();
-    if (hh < 10)
-    {
-    	hh = "0" + hh.toString();
-    }
-    else
-    {
-    	hh = hh.toString();
-    }
-    
-    var mm = this.getMinutes();
-    if (mm < 10)
-    {
-    	mm = "0" + mm.toString();
-    }
-    else
-    {
-    	mm = mm.toString();
-    }
-    
-    return hh + ":" + mm;
-};
-
-/**
- * add method getYmd which returns the date in yyyymmdd format to Date objects
- */
-Date.prototype.getYmd = function() {
-	var yyyy = this.getFullYear().toString();
-	var mm = (this.getMonth()+1).toString(); // getMonth() is zero-based
-	var dd  = this.getDate().toString();
-	return yyyy + (mm[1]?mm:"0"+mm[0]) + (dd[1]?dd:"0"+dd[0]); // padding
-};
