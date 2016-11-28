@@ -38,7 +38,6 @@
 
     <!-- Plugins -->
 
-    <gap:plugin name="org.apache.cordova.globalization" />
     <!-- Core plugins
     <gap:plugin name="org.apache.cordova.battery-status" />
     <gap:plugin name="org.apache.cordova.camera" />
